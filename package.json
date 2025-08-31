@@ -11,7 +11,10 @@
     "version:list": "node project-version.js list",
     "version:restore": "node project-version.js restore",
     "version:current": "node project-version.js current",
-    "version:help": "node project-version.js help"
+    "version:help": "node project-version.js help",
+    "github:push": "./scripts/github-sync.sh push",
+    "github:pull": "./scripts/github-sync.sh pull",
+    "github:sync": "./scripts/github-sync.sh sync"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
