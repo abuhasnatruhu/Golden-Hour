@@ -1,5 +1,4 @@
 {
-  "version": 2,
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
@@ -31,7 +30,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))$",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
