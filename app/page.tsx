@@ -6,38 +6,43 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Clock, AlertCircle } from "lucide-react"
 import { CompactSearchBar } from "@/components/compact-search-bar"
-import { GoldenHourDisplay } from "@/components/golden-hour-display"
+import { GoldenHourDisplay } from "@/src/components/golden-hour-display"
 import { TimeCards } from "@/components/time-cards"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { weatherService } from "@/lib/weather-service"
-import { sunCalculator } from "@/src/lib/sun-calculator"
+import { sunCalculator } from "@/lib/sun-calculator";
 import type { PhotographyConditions } from "@/types/weather"
-import { locationService, type LocationData } from "@/lib/location-service"
-import { SiteHeader } from "@/src/components/site-header"
-import { generateSEOFriendlyURL, formatDateForURL, parseDateFromURL } from "@/lib/url-utils"
-import { locationDatabase } from "@/lib/location-database"
-import { TopPhotographyCities } from "@/src/components/top-photography-cities"
-import { FloatingNavigation } from "@/src/components/floating-navigation"
-import { SiteFooter } from "@/src/components/site-footer"
-import SEOHead from "@/src/components/seo-head"
-import EnhancedInteractiveMap from "@/src/components/enhanced-interactive-map"
-import PhotographyInspiration from "@/src/components/photography-inspiration"
-import PhotographyCalendar from "@/src/components/photography-calendar"
-import AdvancedPhotographyFeatures from "@/src/components/advanced-photography-features"
-import { LocationBasedFAQ } from "@/src/components/location-based-faq"
+import { locationService, type LocationData } from "@/lib/location-service";
+import { SiteHeader } from "@/components/site-header";
+import { generateSEOFriendlyURL, formatDateForURL, parseDateFromURL } from "@/lib/url-utils";
+import { locationDatabase } from "@/lib/location-database";
+import { TopPhotographyCities } from "@/components/top-photography-cities";
+import { FloatingNavigation } from "@/components/floating-navigation";
+import { SiteFooter } from "@/components/site-footer";
+import SEOHead from "@/components/seo-head";
+import EnhancedInteractiveMap from "@/components/enhanced-interactive-map";
+import PhotographyInspiration from "@/components/photography-inspiration";
+import PhotographyCalendar from "@/components/photography-calendar";
+import AdvancedPhotographyFeatures from "@/components/advanced-photography-features";
+import { StaticFAQ } from "@/components/static-faq"
 
-// Define WeatherData type to match weatherService return type
+// Import WeatherData type from types file - extended to match API response
 type WeatherData = {
-  temp: number
-  condition: string
-  description: string
-  clouds: number
-  visibility: number
+  temperature: number
   humidity: number
   windSpeed: number
+  windDirection: number
+  cloudCover: number
+  visibility: number
+  pressure: number
   uvIndex: number
-  sunrise: Date
-  sunset: Date
+  description: string
+  icon: string
+  sunrise?: Date
+  sunset?: Date
+  temp: number
+  condition: string
+  clouds: number
 }
 
 interface GoldenHourTimes {
@@ -183,20 +188,39 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
 
   // Update countdown display when currentTime changes
   useEffect(() => {
-    if (autoLocation && nextGoldenHourTargetTime) {
+    if (autoLocation && nextGoldenHourTargetTime && currentTime) {
       const now = currentTime
       const selectedDate = date ? new Date(date) : new Date(now.toISOString().split("T")[0])
       const today = new Date(now.toDateString())
       const isToday = selectedDate.getTime() === today.getTime()
       
       if (isToday) {
-        const timeUntil = Math.max(0, Math.ceil((nextGoldenHourTargetTime.getTime() - now.getTime()) / (1000 * 60)))
+        const timeUntil = Math.ceil((nextGoldenHourTargetTime.getTime() - now.getTime()) / (1000 * 60))
         
-        if (nextGoldenHourIsStart) {
-          setNextGoldenHour(`starts in ${timeUntil} minutes`)
+        if (timeUntil < 0) {
+          // Golden hour has passed for today
+          setNextGoldenHour("Tomorrow")
+        } else if (timeUntil === 0) {
+          setNextGoldenHour("Now!")
+        } else if (timeUntil < 60) {
+          if (nextGoldenHourIsStart) {
+            setNextGoldenHour(`starts in ${timeUntil} minute${timeUntil !== 1 ? 's' : ''}`)
+          } else {
+            setNextGoldenHour(`ends in ${timeUntil} minute${timeUntil !== 1 ? 's' : ''}`)
+          }
         } else {
-          setNextGoldenHour(`ends in ${timeUntil} minutes`)
+          const hours = Math.floor(timeUntil / 60)
+          const minutes = timeUntil % 60
+          const timeString = hours > 0 ? `${hours}h ${minutes}m` : `${minutes} minutes`
+          if (nextGoldenHourIsStart) {
+            setNextGoldenHour(`starts in ${timeString}`)
+          } else {
+            setNextGoldenHour(`ends in ${timeString}`)
+          }
         }
+      } else {
+        // Not today - just show the date
+        setNextGoldenHour("")
       }
     }
   }, [currentTime, autoLocation, nextGoldenHourTargetTime, nextGoldenHourIsStart, date])
@@ -439,25 +463,46 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
       const conditions = await weatherService.getPhotographyConditions(locationData.lat, locationData.lon)
 
       if (weather) {
-        // Ensure type compatibility
+        // Map weather service response to component's expected format
         const weatherData: WeatherData = {
-          temp: weather.temp,
-          condition: weather.condition,
-          description: weather.description,
-          clouds: weather.clouds,
-          visibility: weather.visibility,
-          humidity: weather.humidity,
-          windSpeed: weather.windSpeed,
-          uvIndex: weather.uvIndex,
-          sunrise: weather.sunrise,
-          sunset: weather.sunset,
+          temperature: (weather as any).temperature || (weather as any).temp || 0,
+          humidity: (weather as any).humidity || 0,
+          windSpeed: (weather as any).windSpeed || 0,
+          windDirection: (weather as any).windDirection || 0,
+          cloudCover: (weather as any).cloudCover || (weather as any).clouds || 0,
+          visibility: (weather as any).visibility || 0,
+          pressure: (weather as any).pressure || 0,
+          uvIndex: (weather as any).uvIndex || 0,
+          description: (weather as any).description || 'Unknown',
+          icon: (weather as any).icon || '01d',
+          sunrise: (weather as any).sunrise,
+          sunset: (weather as any).sunset,
+          temp: (weather as any).temp || (weather as any).temperature || 0,
+          condition: (weather as any).condition || 'Unknown',
+          clouds: (weather as any).clouds || (weather as any).cloudCover || 0,
         }
         
         setWeatherData(weatherData)
       } else {
         setWeatherData(null)
       }
-      setPhotographyConditions(conditions)
+      
+      // Map weather service conditions to expected PhotographyConditions type
+      if (conditions) {
+        const mappedConditions: PhotographyConditions = {
+          goldenHourQuality: conditions.overall >= 80 ? "excellent" : 
+                             conditions.overall >= 60 ? "good" : 
+                             conditions.overall >= 40 ? "fair" : "poor",
+          blueHourQuality: conditions.overall >= 80 ? "excellent" : 
+                           conditions.overall >= 60 ? "good" : 
+                           conditions.overall >= 40 ? "fair" : "poor",
+          overallScore: conditions.overall,
+          recommendations: [conditions.recommendation]
+        }
+        setPhotographyConditions(mappedConditions)
+      } else {
+        setPhotographyConditions(null)
+      }
     } catch (error) {
       console.error("Error fetching weather data:", error)
       setWeatherData(null)
@@ -470,8 +515,9 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
   const calculateNextGoldenHour = useCallback(
     async (locationData: LocationData, shouldUpdateURL = false) => {
       console.log('🔥 calculateNextGoldenHour called with:', { locationData, shouldUpdateURL, currentTime, date })
-      const now = currentTime
-      const selectedDate = date ? new Date(date) : new Date(now.toISOString().split("T")[0])
+      const now = currentTime || new Date()
+      const nowDateStr = now ? now.toISOString().split("T")[0] : new Date().toISOString().split("T")[0]
+      const selectedDate = date ? new Date(date) : new Date(nowDateStr)
       console.log('🔥 calculateNextGoldenHour - now:', now, 'selectedDate:', selectedDate)
 
       try {
@@ -479,7 +525,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
         console.log('🔥 sunCalculator.getNextGoldenHour returned:', nextGoldenHour)
 
         if (nextGoldenHour) {
-          setNextGoldenHourType(nextGoldenHour.type === "morning" ? "Morning Golden Hour" : "Evening Golden Hour")
+          setNextGoldenHourType("Evening Golden Hour")
           setNextGoldenHourTime(nextGoldenHour.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
           setNextGoldenHourEndTime(nextGoldenHour.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
           setNextGoldenHourTargetTime(nextGoldenHour.start)
@@ -495,7 +541,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
         } else {
           const fallbackTime = new Date(selectedDate)
           fallbackTime.setHours(6, 30, 0, 0)
-          setNextGoldenHourType("Morning Golden Hour")
+          setNextGoldenHourType("Evening Golden Hour")
           setNextGoldenHourTime(fallbackTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
           setNextGoldenHourEndTime(fallbackTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
           setNextGoldenHourTargetTime(fallbackTime)
@@ -506,7 +552,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
         console.error("Error calculating sun times:", error)
         const fallbackTime = new Date(selectedDate)
         fallbackTime.setHours(6, 30, 0, 0)
-        setNextGoldenHourType("Morning Golden Hour")
+        setNextGoldenHourType("Evening Golden Hour")
         setNextGoldenHourTime(fallbackTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
         setNextGoldenHourEndTime(fallbackTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
         setNextGoldenHourTargetTime(fallbackTime)
@@ -620,7 +666,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
       <SEOHead
         location={autoLocation || undefined}
         pathname={isClient ? window.location.pathname : "/"}
-        date={date ? new Date(date) : null}
+        date={date ? new Date(date) : undefined}
       />
       <SiteHeader />
 
@@ -667,18 +713,21 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
             </div>
           </div>
 
-          <GoldenHourDisplay
-            nextGoldenHour={nextGoldenHour}
-            nextGoldenHourTime={nextGoldenHourTime}
-            nextGoldenHourEndTime={nextGoldenHourEndTime}
-            nextGoldenHourType={nextGoldenHourType}
-            nextGoldenHourIsStart={nextGoldenHourIsStart}
-            autoLocation={autoLocation}
-            weatherData={weatherData}
-            photographyConditions={photographyConditions}
-            weatherLoading={weatherLoading}
-            selectedDate={date ? new Date(date) : null}
-          />
+          {/* Next Golden Hour Card */}
+          {autoLocation && (
+            <GoldenHourDisplay
+              nextGoldenHour={nextGoldenHour}
+              nextGoldenHourTime={nextGoldenHourTime}
+              nextGoldenHourEndTime={nextGoldenHourEndTime}
+              nextGoldenHourType={nextGoldenHourType}
+              nextGoldenHourIsStart={nextGoldenHourIsStart}
+              autoLocation={autoLocation}
+              weatherData={weatherData}
+              photographyConditions={photographyConditions}
+              weatherLoading={weatherLoading}
+              selectedDate={date ? new Date(date) : null}
+            />
+          )}
 
           {autoLocation && nextGoldenHourTargetTime && (
             <div className="max-w-2xl mx-auto mb-8 text-center">
@@ -788,42 +837,7 @@ END:VCALENDAR`
             </div>
           </div>
 
-          {/* Next Golden Hour Card */}
-          {nextGoldenHourType && autoLocation && (
-            <div className="max-w-2xl mx-auto mb-8">
-              <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-2">
-                        {nextGoldenHourType}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-1">
-                          <span className="text-amber-700 dark:text-amber-300">Starts:</span>
-                          <span className="font-mono font-medium">{nextGoldenHourTime}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-amber-700 dark:text-amber-300">Ends:</span>
-                          <span className="font-mono font-medium">{nextGoldenHourEndTime}</span>
-                        </div>
-                      </div>
-                      {nextGoldenHour && (
-                        <div className="mt-3 text-lg font-medium text-amber-800 dark:text-amber-200">
-                          {nextGoldenHour}
-                        </div>
-                      )}
-                    </div>
-                    <div className="ml-4">
-                      <svg className="w-16 h-16 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>
-                      </svg>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          {/* Duplicate golden hour card with Starts/Ends removed - using GoldenHourDisplay component instead */}
 
           <div ref={citiesRef}>
             <TopPhotographyCities
@@ -885,14 +899,8 @@ END:VCALENDAR`
             )}
           </div>
 
-        {autoLocation && times && (
-          <div className="max-w-6xl mx-auto mb-8">
-            <LocationBasedFAQ location={autoLocation} goldenHourTimes={times} />
-          </div>
-        )}
-
-          <div className="max-w-6xl mx-auto mb-8">
-          </div>
+        {/* Static SEO-Optimized FAQ Section */}
+        <StaticFAQ />
 
           <Card className="max-w-4xl mx-auto mt-8 bg-white/95 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
@@ -926,7 +934,7 @@ END:VCALENDAR`
         </div>
       </div>
 
-      <FloatingNavigation onScrollToSection={scrollToSection} />
+      {mounted && <FloatingNavigation onScrollToSection={scrollToSection} />}
 
       <SiteFooter />
     </ErrorBoundary>

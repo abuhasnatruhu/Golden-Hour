@@ -53,28 +53,7 @@ export const TimeCards = React.memo(function TimeCards({ times }: TimeCardsProps
         </CardContent>
       </Card>
 
-      <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-xl">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-card-foreground">
-            <Sun className="w-5 h-5 text-yellow-500" aria-hidden="true" />
-            Golden Hours
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-3 bg-yellow-50 rounded-lg">
-            <div className="font-medium text-yellow-800 mb-1">Morning Golden Hour</div>
-            <div className="font-mono text-lg text-yellow-600">
-              {times.goldenHourMorning.start} - {times.goldenHourMorning.end}
-            </div>
-          </div>
-          <div className="p-3 bg-yellow-50 rounded-lg">
-            <div className="font-medium text-yellow-800 mb-1">Evening Golden Hour</div>
-            <div className="font-mono text-lg text-yellow-600">
-              {times.goldenHourEvening.start} - {times.goldenHourEvening.end}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Golden Hours card removed - Evening Golden Hour display removed as requested */}
 
       <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-xl md:col-span-2">
         <CardHeader>

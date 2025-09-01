@@ -3,7 +3,6 @@
 import React from "react"
 import { Sun, MapPin } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import ShareButton from "@/components/share-button"
 import type { LocationData } from "@/lib/location-service"
 import type { WeatherData, PhotographyConditions } from "@/types/weather"
 import { LocationDisplayUtils } from "@/lib/location-display-utils"
@@ -75,18 +74,21 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
 
     switch (context) {
       case "past":
-        return `${nextGoldenHourType === "morning" ? "Morning" : "Evening"} golden hour was`
+        return "Golden hour was"
       case "future":
-        return `${nextGoldenHourType === "morning" ? "Morning" : "Evening"} golden hour will be`
+        return "Golden hour will be"
       case "today":
       default:
         if (!nextGoldenHourIsStart) {
           return "Currently in golden hour"
         }
-        return `${nextGoldenHourType === "morning" ? "Morning" : "Evening"} golden hour`
+        return "Golden hour"
     }
   }
-  if (!nextGoldenHour) return null
+  // Check if we have the essential data to display the card
+  if (!nextGoldenHourTime || !autoLocation) {
+    return null;
+  }
 
   return (
     <div className="text-center mb-8">
@@ -204,13 +206,24 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
                   return nextGoldenHour
                 }
 
+                // Show countdown or calculating state
+                if (!nextGoldenHour || nextGoldenHour === "") {
+                  return (
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="text-base sm:text-lg md:text-xl font-medium text-yellow-100 drop-shadow-lg">
+                        Calculating...
+                      </div>
+                    </div>
+                  )
+                }
+                
                 return (
                   <div className="flex flex-col items-center gap-1">
                     <div className="text-base sm:text-lg md:text-xl font-medium text-yellow-100 drop-shadow-lg">
                       {nextGoldenHour.includes("ends in") ? "Ends in" : "Starts in"}
                     </div>
                     <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-xl animate-pulse">
-                      {nextGoldenHour?.replace(/^(starts in|ends in) /, "") || ""}
+                      {nextGoldenHour?.replace(/^(starts in|ends in) /, "") || "calculating..."}
                     </div>
                   </div>
                 )
@@ -219,7 +232,7 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
 
             {autoLocation && (
               <div className="flex flex-col items-center gap-2 text-sm text-yellow-100 mt-2 drop-shadow-lg">
-                {/* Share Button */}
+                {/* Share Button - Temporarily disabled due to dropdown-menu issues
                 <div className="mt-3">
                   <ShareButton
                     title={`Golden Hour Times in ${LocationDisplayUtils.getCityName(autoLocation)}`}
@@ -229,6 +242,7 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
                     className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
                   />
                 </div>
+                */}
 
                 {weatherLoading ? (
                   <div className="flex items-center gap-2 text-xs text-yellow-100" role="status" aria-live="polite">
