@@ -10,7 +10,7 @@ import { GoldenHourDisplay } from "@/components/golden-hour-display"
 import { TimeCards } from "@/components/time-cards"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { weatherService } from "@/lib/weather-service"
-import { sunCalculator } from "@/lib/sun-calculator"
+import { sunCalculator } from "@/src/lib/sun-calculator"
 import type { PhotographyConditions } from "@/types/weather"
 
 // Define WeatherData type to match weatherService return type
