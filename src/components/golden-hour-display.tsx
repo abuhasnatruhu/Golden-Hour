@@ -48,23 +48,36 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
 
   const getContextualMessage = () => {
     const context = getDateContext()
-    const dateStr = selectedDate
-      ? selectedDate.toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      : "today"
-
+    
+    // Format date with ordinal suffix (1st, 2nd, 3rd, etc.)
+    const formatDateWithOrdinal = (date: Date) => {
+      const day = date.getDate()
+      const suffix = day === 1 || day === 21 || day === 31 ? 'st' : 
+                     day === 2 || day === 22 ? 'nd' : 
+                     day === 3 || day === 23 ? 'rd' : 'th'
+      
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        year: "numeric",
+      }).replace(/\d+,/, `${day}${suffix},`)
+    }
+    
+    const dateToShow = selectedDate || new Date()
+    const dateStr = formatDateWithOrdinal(dateToShow)
+    
     switch (context) {
       case "past":
-        return `Golden hour times for ${dateStr}`
+        return `Golden hour for ${dateStr}`
       case "future":
-        return `Upcoming golden hour on ${dateStr}`
+        return `Golden hour on ${dateStr}`
       case "today":
       default:
-        return nextGoldenHourIsStart ? "Next Golden Hour" : "Next Golden Hour"
+        const today = new Date()
+        if (dateToShow.toDateString() === today.toDateString()) {
+          return "Next Golden Hour Today"
+        }
+        return `Golden hour on ${dateStr}`
     }
   }
 
@@ -143,7 +156,11 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
               {/* Subtle glow effect */}
               <div className="absolute inset-0 w-12 h-12 bg-yellow-400/50 rounded-full blur-lg animate-pulse"></div>
             </div>
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-100 tracking-wider uppercase drop-shadow-lg">
+            <div className={`${
+              getContextualMessage().length > 30 
+                ? "text-sm sm:text-base md:text-lg" 
+                : "text-lg sm:text-xl md:text-2xl"
+            } font-bold text-yellow-100 tracking-wider uppercase drop-shadow-lg px-2`}>
               {getContextualMessage().toUpperCase()}
             </div>
 

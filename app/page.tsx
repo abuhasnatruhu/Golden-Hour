@@ -109,7 +109,11 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
 
   const searchParams = normalizedPropSearchParams || hookSearchParams
   const [location, setLocation] = useState("")
-  const [date, setDate] = useState("")
+  const [date, setDate] = useState(() => {
+    // Initialize with today's date in YYYY-MM-DD format
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  })
   const [times, setTimes] = useState<GoldenHourTimes | null>(null)
   const [loading, setLoading] = useState(false)
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
