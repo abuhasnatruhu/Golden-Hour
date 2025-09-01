@@ -107,7 +107,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
   const [date, setDate] = useState("")
   const [times, setTimes] = useState<GoldenHourTimes | null>(null)
   const [loading, setLoading] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const [currentTime, setCurrentTime] = useState<Date | null>(null)
   const [autoLocation, setAutoLocation] = useState<LocationData | null>(null)
   const [nextGoldenHour, setNextGoldenHour] = useState<string>("")
   const [nextGoldenHourTime, setNextGoldenHourTime] = useState<string>("")
@@ -121,6 +121,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
   const [photographyConditions, setPhotographyConditions] = useState<PhotographyConditions | null>(null)
   const [weatherLoading, setWeatherLoading] = useState<boolean>(false)
   const [mounted, setMounted] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   const searchRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<HTMLDivElement>(null)
@@ -137,17 +138,20 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
     dateParam: string | null
   }>({ lat: null, lng: null, locationName: null, dateParam: null })
 
-  // Extract URL parameter values directly from window.location on client side
+  // Initialize client-side state and URL parameters
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlSearchParams = new URLSearchParams(window.location.search)
-      const lat = urlSearchParams.get("lat")
-      const lng = urlSearchParams.get("lng") || urlSearchParams.get("lon")
-      const locationName = urlSearchParams.get("locationName") || urlSearchParams.get("location")
-      const dateParam = urlSearchParams.get("dateParam") || urlSearchParams.get("date")
-      
-      setUrlParams({ lat, lng, locationName, dateParam })
-    }
+    setIsClient(true)
+    setCurrentTime(new Date())
+    setMounted(true)
+    
+    // Extract URL parameters on client side
+    const urlSearchParams = new URLSearchParams(window.location.search)
+    const lat = urlSearchParams.get("lat")
+    const lng = urlSearchParams.get("lng") || urlSearchParams.get("lon")
+    const locationName = urlSearchParams.get("locationName") || urlSearchParams.get("location")
+    const dateParam = urlSearchParams.get("dateParam") || urlSearchParams.get("date")
+    
+    setUrlParams({ lat, lng, locationName, dateParam })
   }, [])
 
   // Extract values from state for easier access
@@ -156,11 +160,11 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
   // Store timezone separately to avoid re-renders
   const timezone = autoLocation?.timezone
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // Removed - merged with main initialization useEffect above
 
   useEffect(() => {
+    if (!isClient) return
+    
     const updateTime = () => {
       const now = new Date()
       if (timezone) {
@@ -175,7 +179,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
 
     const timer = setInterval(updateTime, 1000)
     return () => clearInterval(timer)
-  }, [timezone])
+  }, [timezone, isClient])
 
   // Update countdown display when currentTime changes
   useEffect(() => {
@@ -283,7 +287,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
 
   const updateURL = useCallback(
     async (locationData: any, selectedDate: string) => {
-      if (locationData && typeof window !== "undefined") {
+      if (locationData && isClient) {
         const dateObj = selectedDate ? new Date(selectedDate) : new Date()
 
         let locationName = locationData.city
@@ -318,7 +322,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
         }
       }
     },
-    [router, propSearchParams],
+    [router, propSearchParams, isClient],
   )
 
   const autoDetectLocation = useCallback(async () => {
@@ -615,8 +619,8 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
     <ErrorBoundary>
       <SEOHead
         location={autoLocation || undefined}
-        pathname={typeof window !== "undefined" ? window.location.pathname : "/"}
-        date={date ? new Date(date) : new Date()}
+        pathname={isClient ? window.location.pathname : "/"}
+        date={date ? new Date(date) : null}
       />
       <SiteHeader />
 
@@ -767,14 +771,14 @@ END:VCALENDAR`
             <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur-sm rounded-full px-6 py-3 text-foreground border border-border">
               <Clock className="w-5 h-5" />
               <span className="font-mono text-lg">
-                {mounted && autoLocation?.timezone
+                {mounted && currentTime && autoLocation?.timezone
                   ? currentTime.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                       second: "2-digit",
                       timeZone: autoLocation.timezone,
                     })
-                  : mounted
+                  : mounted && currentTime
                     ? currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
                     : "--:--:--"}
               </span>
