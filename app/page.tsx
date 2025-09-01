@@ -788,6 +788,43 @@ END:VCALENDAR`
             </div>
           </div>
 
+          {/* Next Golden Hour Card */}
+          {nextGoldenHourType && autoLocation && (
+            <div className="max-w-2xl mx-auto mb-8">
+              <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-2">
+                        {nextGoldenHourType}
+                      </h3>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <span className="text-amber-700 dark:text-amber-300">Starts:</span>
+                          <span className="font-mono font-medium">{nextGoldenHourTime}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-amber-700 dark:text-amber-300">Ends:</span>
+                          <span className="font-mono font-medium">{nextGoldenHourEndTime}</span>
+                        </div>
+                      </div>
+                      {nextGoldenHour && (
+                        <div className="mt-3 text-lg font-medium text-amber-800 dark:text-amber-200">
+                          {nextGoldenHour}
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-4">
+                      <svg className="w-16 h-16 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <div ref={citiesRef}>
             <TopPhotographyCities
               onCitySelect={async (locationData) => {
