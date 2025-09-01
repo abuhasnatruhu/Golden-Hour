@@ -143,7 +143,7 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
               {/* Subtle glow effect */}
               <div className="absolute inset-0 w-12 h-12 bg-yellow-400/50 rounded-full blur-lg animate-pulse"></div>
             </div>
-            <div className="text-sm font-medium text-yellow-100 tracking-wider uppercase drop-shadow-lg">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-100 tracking-wider uppercase drop-shadow-lg">
               {getContextualMessage().toUpperCase()}
             </div>
 
