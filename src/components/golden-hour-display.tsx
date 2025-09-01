@@ -74,15 +74,15 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
 
     switch (context) {
       case "past":
-        return "Golden hour was"
+        return "Golden hour was at"
       case "future":
-        return "Golden hour will be"
+        return "Golden hour will be at"
       case "today":
       default:
         if (!nextGoldenHourIsStart) {
           return "Currently in golden hour"
         }
-        return "Golden hour"
+        return "Happens in"
     }
   }
   // Check if we have the essential data to display the card
@@ -210,20 +210,20 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
                 if (!nextGoldenHour || nextGoldenHour === "") {
                   return (
                     <div className="flex flex-col items-center gap-1">
-                      <div className="text-base sm:text-lg md:text-xl font-medium text-yellow-100 drop-shadow-lg">
-                        Calculating...
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-xl animate-pulse">
+                        Calculating timing...
                       </div>
                     </div>
                   )
                 }
                 
+                // Extract just the time part from nextGoldenHour (now includes seconds)
+                const timeOnly = nextGoldenHour?.replace(/^(starts in|ends in) /, "")
+                
                 return (
                   <div className="flex flex-col items-center gap-1">
-                    <div className="text-base sm:text-lg md:text-xl font-medium text-yellow-100 drop-shadow-lg">
-                      {nextGoldenHour.includes("ends in") ? "Ends in" : "Starts in"}
-                    </div>
-                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-xl animate-pulse">
-                      {nextGoldenHour?.replace(/^(starts in|ends in) /, "") || "calculating..."}
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-xl">
+                      <span className="animate-pulse">{timeOnly || "calculating..."}</span>
                     </div>
                   </div>
                 )

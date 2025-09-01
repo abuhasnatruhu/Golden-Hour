@@ -186,7 +186,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
     return () => clearInterval(timer)
   }, [timezone, isClient])
 
-  // Update countdown display when currentTime changes
+  // Update countdown display when currentTime changes - now with seconds
   useEffect(() => {
     if (autoLocation && nextGoldenHourTargetTime && currentTime) {
       const now = currentTime
@@ -195,28 +195,31 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
       const isToday = selectedDate.getTime() === today.getTime()
       
       if (isToday) {
-        const timeUntil = Math.ceil((nextGoldenHourTargetTime.getTime() - now.getTime()) / (1000 * 60))
+        const msUntil = nextGoldenHourTargetTime.getTime() - now.getTime()
+        const secondsUntil = Math.floor(msUntil / 1000)
         
-        if (timeUntil < 0) {
+        if (secondsUntil < 0) {
           // Golden hour has passed for today
           setNextGoldenHour("Tomorrow")
-        } else if (timeUntil === 0) {
+        } else if (secondsUntil === 0) {
           setNextGoldenHour("Now!")
-        } else if (timeUntil < 60) {
-          if (nextGoldenHourIsStart) {
-            setNextGoldenHour(`starts in ${timeUntil} minute${timeUntil !== 1 ? 's' : ''}`)
-          } else {
-            setNextGoldenHour(`ends in ${timeUntil} minute${timeUntil !== 1 ? 's' : ''}`)
-          }
+        } else if (secondsUntil < 60) {
+          // Less than a minute - show seconds
+          const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
+          setNextGoldenHour(`${prefix}${secondsUntil} second${secondsUntil !== 1 ? 's' : ''}`)
+        } else if (secondsUntil < 3600) {
+          // Less than an hour - show minutes and seconds
+          const minutes = Math.floor(secondsUntil / 60)
+          const seconds = secondsUntil % 60
+          const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
+          setNextGoldenHour(`${prefix}${minutes}m ${seconds}s`)
         } else {
-          const hours = Math.floor(timeUntil / 60)
-          const minutes = timeUntil % 60
-          const timeString = hours > 0 ? `${hours}h ${minutes}m` : `${minutes} minutes`
-          if (nextGoldenHourIsStart) {
-            setNextGoldenHour(`starts in ${timeString}`)
-          } else {
-            setNextGoldenHour(`ends in ${timeString}`)
-          }
+          // More than an hour - show hours, minutes, and seconds
+          const hours = Math.floor(secondsUntil / 3600)
+          const minutes = Math.floor((secondsUntil % 3600) / 60)
+          const seconds = secondsUntil % 60
+          const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
+          setNextGoldenHour(`${prefix}${hours}h ${minutes}m ${seconds}s`)
         }
       } else {
         // Not today - just show the date

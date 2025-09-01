@@ -75,15 +75,15 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
 
     switch (context) {
       case "past":
-        return "Golden hour was"
+        return "Golden hour was at"
       case "future":
-        return "Golden hour will be"
+        return "Golden hour will be at"
       case "today":
       default:
         if (nextGoldenHourIsStart) {
           return "Currently in golden hour"
         }
-        return "Golden hour"
+        return "Happens in"
     }
   }
   if (!nextGoldenHour) return null
@@ -206,13 +206,16 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
                   )
                 }
                 
+                // Extract and format the countdown with seconds
+                const timeString = nextGoldenHour?.replace(/^(starts in|ends in) /, "")
+                
                 return (
                   <div className="flex flex-col items-center gap-1">
                     <div className="text-base sm:text-lg md:text-xl font-medium text-yellow-100 drop-shadow-lg">
                       {nextGoldenHourIsStart ? "Starts in" : "Ends in"}
                     </div>
                     <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-xl animate-pulse">
-                      {nextGoldenHour?.replace(/^(starts in|ends in) /, "") || "calculating..."}
+                      {timeString || "calculating..."}
                     </div>
                   </div>
                 )
