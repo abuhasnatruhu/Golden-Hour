@@ -1,8 +1,17 @@
+"use client"
+
 import { Mail, Phone, MapPin, Clock, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function SiteFooter() {
   const currentYear = new Date().getFullYear()
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   return (
     <footer className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
@@ -30,29 +39,44 @@ export function SiteFooter() {
             <h4 className="text-lg font-semibold">Quick Links</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#search" className="text-slate-300 hover:text-white transition-colors">
+                <button 
+                  onClick={() => scrollToSection('search')} 
+                  className="text-slate-300 hover:text-white transition-colors text-left"
+                >
                   Golden Hour Calculator
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#map" className="text-slate-300 hover:text-white transition-colors">
+                <button 
+                  onClick={() => scrollToSection('map')} 
+                  className="text-slate-300 hover:text-white transition-colors text-left"
+                >
                   Interactive Sun Map
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#calendar" className="text-slate-300 hover:text-white transition-colors">
+                <button 
+                  onClick={() => scrollToSection('calendar')} 
+                  className="text-slate-300 hover:text-white transition-colors text-left"
+                >
                   Photography Calendar
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#inspiration" className="text-slate-300 hover:text-white transition-colors">
+                <button 
+                  onClick={() => scrollToSection('inspiration')} 
+                  className="text-slate-300 hover:text-white transition-colors text-left"
+                >
                   Photo Inspiration
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#cities" className="text-slate-300 hover:text-white transition-colors">
+                <button 
+                  onClick={() => scrollToSection('cities')} 
+                  className="text-slate-300 hover:text-white transition-colors text-left"
+                >
                   Top Photography Cities
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -126,7 +150,7 @@ export function SiteFooter() {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-slate-400" />
-                <span className="text-slate-300">+880 1XXX-XXXXXX</span>
+                <span className="text-slate-300">USA: +1 703 436 9404</span>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="w-4 h-4 text-slate-400" />

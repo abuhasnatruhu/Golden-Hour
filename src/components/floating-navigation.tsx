@@ -118,25 +118,27 @@ export function FloatingNavigation({ onScrollToSection }: FloatingNavigationProp
       {/* Labels for desktop */}
       <div
         className={cn(
-          "fixed bottom-[4.5rem] right-20 z-40 hidden md:flex flex-col-reverse gap-3 transition-all duration-300 origin-bottom-right",
-          isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none",
+          "fixed bottom-6 right-24 z-40 hidden md:flex flex-col-reverse gap-3 transition-all duration-300 origin-bottom-right pointer-events-none",
+          isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0",
         )}
       >
         {navigationItems.map((item, index) => (
           <div
             key={`label-${item.id}`}
-            className="bg-black/80 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap"
+            className="bg-black/80 text-white px-3 py-1.5 rounded-lg text-sm whitespace-nowrap flex items-center h-12 shadow-lg"
             style={{
               transitionDelay: isOpen ? `${index * 50}ms` : "0ms",
+              transform: "translateY(0)",
             }}
           >
             {item.label}
           </div>
         ))}
         <div
-          className="bg-black/80 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap"
+          className="bg-black/80 text-white px-3 py-1.5 rounded-lg text-sm whitespace-nowrap flex items-center h-12 shadow-lg"
           style={{
             transitionDelay: isOpen ? `${navigationItems.length * 50}ms` : "0ms",
+            transform: "translateY(0)",
           }}
         >
           Top

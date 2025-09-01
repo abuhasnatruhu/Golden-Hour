@@ -344,7 +344,9 @@ export function TopPhotographyCities({ onCitySelect }: TopPhotographyCitiesProps
                       <img
                         src={city.imageUrl || "/placeholder.svg"}
                         alt={`${city.name}, ${city.country}`}
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        className={`absolute inset-0 w-full h-full transition-transform duration-300 group-hover:scale-110 ${
+                          city.id === 'paris' ? 'object-center object-cover' : 'object-cover'
+                        }`}
                         loading="lazy"
                         onError={() => handleImageError(city.id)}
                         onLoad={() => handleImageLoad(city.id)}
