@@ -12,6 +12,19 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { weatherService } from "@/lib/weather-service"
 import { sunCalculator } from "@/src/lib/sun-calculator"
 import type { PhotographyConditions } from "@/types/weather"
+import { locationService, type LocationData } from "@/lib/location-service"
+import { SiteHeader } from "@/src/components/site-header"
+import { generateSEOFriendlyURL, formatDateForURL, parseDateFromURL } from "@/lib/url-utils"
+import { locationDatabase } from "@/lib/location-database"
+import { TopPhotographyCities } from "@/src/components/top-photography-cities"
+import { FloatingNavigation } from "@/src/components/floating-navigation"
+import { SiteFooter } from "@/src/components/site-footer"
+import SEOHead from "@/src/components/seo-head"
+import EnhancedInteractiveMap from "@/src/components/enhanced-interactive-map"
+import PhotographyInspiration from "@/src/components/photography-inspiration"
+import PhotographyCalendar from "@/src/components/photography-calendar"
+import AdvancedPhotographyFeatures from "@/src/components/advanced-photography-features"
+import { LocationBasedFAQ } from "@/src/components/location-based-faq"
 
 // Define WeatherData type to match weatherService return type
 type WeatherData = {
@@ -26,19 +39,6 @@ type WeatherData = {
   sunrise: Date
   sunset: Date
 }
-import { locationService, type LocationData } from "@/lib/location-service"
-import { SiteHeader } from "@/src/components/site-header"
-import { generateSEOFriendlyURL, formatDateForURL, parseDateFromURL } from "@/lib/url-utils"
-import { locationDatabase } from "@/lib/location-database"
-import { TopPhotographyCities } from "@/src/components/top-photography-cities"
-import { FloatingNavigation } from "@/src/components/floating-navigation"
-import { SiteFooter } from "@/src/components/site-footer"
-import SEOHead from "@/src/components/seo-head"
-import EnhancedInteractiveMap from "@/src/components/enhanced-interactive-map"
-import PhotographyInspiration from "@/src/components/photography-inspiration"
-import PhotographyCalendar from "@/src/components/photography-calendar"
-import AdvancedPhotographyFeatures from "@/src/components/advanced-photography-features"
-import { LocationBasedFAQ } from "@/src/components/location-based-faq"
 
 interface GoldenHourTimes {
   sunrise: string
@@ -367,7 +367,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
             accuracy: "Fallback",
             quality: 10,
             source: "Fallback",
-            timestamp: Date.now(),
+            timestamp: new Date().getTime(),
             confidence: 0.1,
           }
 
@@ -434,7 +434,25 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
       const weather = await weatherService.getWeatherConditions(locationData.lat, locationData.lon)
       const conditions = await weatherService.getPhotographyConditions(locationData.lat, locationData.lon)
 
-      setWeatherData(weather)
+      if (weather) {
+        // Ensure type compatibility
+        const weatherData: WeatherData = {
+          temp: weather.temp,
+          condition: weather.condition,
+          description: weather.description,
+          clouds: weather.clouds,
+          visibility: weather.visibility,
+          humidity: weather.humidity,
+          windSpeed: weather.windSpeed,
+          uvIndex: weather.uvIndex,
+          sunrise: weather.sunrise,
+          sunset: weather.sunset,
+        }
+        
+        setWeatherData(weatherData)
+      } else {
+        setWeatherData(null)
+      }
       setPhotographyConditions(conditions)
     } catch (error) {
       console.error("Error fetching weather data:", error)

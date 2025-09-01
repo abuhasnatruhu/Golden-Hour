@@ -260,7 +260,7 @@ export function TopPhotographyCities({ onCitySelect }: TopPhotographyCitiesProps
 
   const saveRecentSearch = (location: string, lat: number, lng: number, country: string) => {
     const newSearch: RecentSearch = {
-      id: Date.now().toString(),
+      id: `${location}-${lat}-${lng}-${Math.random().toString(36).substring(2, 9)}`,
       location,
       lat,
       lng,
@@ -306,12 +306,11 @@ export function TopPhotographyCities({ onCitySelect }: TopPhotographyCitiesProps
   }
 
   const handleImageError = (cityId: string) => {
-    console.log(`[v0] Image failed to load for city: ${cityId}`)
     setImageLoadErrors((prev) => new Set([...prev, cityId]))
   }
 
   const handleImageLoad = (cityId: string) => {
-    console.log(`[v0] Image loaded successfully for city: ${cityId}`)
+    // Image loaded successfully
   }
 
   return (

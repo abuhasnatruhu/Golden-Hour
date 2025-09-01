@@ -363,8 +363,13 @@ class APIOptimizer {
   }
 
   private generateId(): string {
-    return Math.random().toString(36).substr(2, 9)
+    // Use timestamp + counter for stable ID generation
+    const timestamp = new Date().getTime()
+    const counter = (this.idCounter = (this.idCounter || 0) + 1)
+    return `${timestamp}-${counter}`
   }
+  
+  private idCounter: number = 0
 
   // Public methods for monitoring
   getStats() {

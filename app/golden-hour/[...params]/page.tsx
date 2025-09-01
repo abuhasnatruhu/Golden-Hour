@@ -90,8 +90,7 @@ export default async function GoldenHourPage({ params }: PageProps) {
       searchParamsObject.dateParam = date
     }
 
-    console.log("[v0] Passing to main page with location name:", searchParamsObject)
-    return <GoldenHourMainPage searchParams={searchParamsObject} />
+    return <GoldenHourMainPage searchParams={Promise.resolve(searchParamsObject)} />
   }
 
   // If we have coordinates, use them
@@ -107,11 +106,9 @@ export default async function GoldenHourPage({ params }: PageProps) {
       searchParamsObject.dateParam = date
     }
 
-    console.log("[v0] Passing to main page with coordinates:", searchParamsObject)
-    return <GoldenHourMainPage searchParams={searchParamsObject} />
+    return <GoldenHourMainPage searchParams={Promise.resolve(searchParamsObject)} />
   }
 
   // Fallback redirect
-  console.log("[v0] Fallback redirect to homepage")
   redirect("/")
 }

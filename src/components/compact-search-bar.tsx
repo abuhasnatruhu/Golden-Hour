@@ -230,14 +230,10 @@ function CompactSearchBar({
             activeField === "location" ? "bg-gray-50" : ""
           }`}
           onClick={() => {
-            console.log("Location button clicked, current activeField:", activeField) // Debug log
             const newActiveField = activeField === "location" ? null : "location"
             setActiveField(newActiveField)
-            // Don't reset manuallyCleared when just opening the search field
-            console.log("Setting activeField to:", newActiveField) // Debug log
             if (newActiveField === "location") {
               setTimeout(() => {
-                console.log("Focusing input field") // Debug log
                 inputRef.current?.focus()
               }, 100)
             }
