@@ -122,7 +122,7 @@ const nextConfig = {
   },
   
   // Webpack optimizations
-  webpack: (config, { isServer }) => {
+  /* webpack: (config, { isServer }) => {
     // Optimize bundle splitting for better caching
     if (!isServer) {
       config.optimization.splitChunks = {
@@ -161,7 +161,7 @@ const nextConfig = {
     }
     
     return config;
-  },
+  }, */
 }
 
 export default nextConfig;

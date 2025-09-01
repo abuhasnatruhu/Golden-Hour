@@ -69,24 +69,70 @@ class LocationService {
 
   private async getIPLocation(): Promise<LocationData | null> {
     try {
-      const response = await fetch("https://ipapi.co/json/")
-      if (!response.ok) throw new Error("IP location failed")
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+
+      const response = await fetch("https://ipapi.co/json/", {
+        signal: controller.signal
+      }).catch(() => null) // Silently handle network errors
+      
+      clearTimeout(timeout)
+      
+      if (!response) return null
+      if (!response.ok) return null
 
       const data = await response.json()
+
+      // Validate required fields
+      if (!data.latitude || !data.longitude) {
+        throw new Error("Invalid coordinates from IP location service")
+      }
+
+      const lat = Number.parseFloat(data.latitude)
+      const lon = Number.parseFloat(data.longitude)
+
+      if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+        throw new Error("Invalid coordinates from IP location service")
+      }
 
       return {
         city: data.city || "Unknown City",
         country: data.country_name || "Unknown Country",
         state: data.region,
         postal: data.postal,
-        address: `${data.city}, ${data.region}, ${data.country_name}`,
-        lat: Number.parseFloat(data.latitude),
-        lon: Number.parseFloat(data.longitude),
+        address: `${data.city || "Unknown"}, ${data.region || ""}, ${data.country_name || "Unknown"}`.replace(", ,", ",").replace(/^,|,$/, ""),
+        lat,
+        lon,
         timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         accuracy: "IP-based",
       }
-    } catch (error) {
-      console.error("IP location failed:", error)
+    } catch (error: any) {
+      console.warn("IP location service unavailable:", error.message || error)
+      // Try fallback IP service
+      try {
+        const fallbackResponse = await fetch("https://api.ipify.org?format=json", {
+          signal: AbortSignal.timeout(3000)
+        })
+        
+        if (fallbackResponse.ok) {
+          const ipData = await fallbackResponse.json()
+          console.info("Using fallback location with IP:", ipData.ip)
+          
+          // Return a basic fallback location
+          return {
+            city: "Unknown City",
+            country: "Unknown Country",
+            address: "Location from IP",
+            lat: 40.7128, // NYC coordinates as fallback
+            lon: -74.0060,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            accuracy: "IP-fallback"
+          }
+        }
+      } catch (fallbackError) {
+        console.warn("Fallback IP service also failed:", fallbackError)
+      }
+      
       return null
     }
   }

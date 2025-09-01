@@ -1,6 +1,6 @@
 "use client"
 
-import ShareButton, { QuickCopyButton } from "@/components/share-button"
+// import ShareButton, { QuickCopyButton } from "@/components/share-button"  // Temporarily disabled due to dropdown-menu issues
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Sun, MapPin, Clock } from "lucide-react"
@@ -62,17 +62,10 @@ export default function ShareDemoPage() {
             <div className="border-t border-white/20 pt-6">
               <h3 className="text-lg font-semibold mb-4">Share this location:</h3>
               <div className="flex flex-wrap gap-3">
-                <ShareButton 
-                  title="Golden Hour Times in Paris, France"
-                  description="Perfect golden hour photography times for Paris. Evening Golden Hour starts at 6:45 PM and ends at 7:30 PM."
-                  variant="outline"
-                  size="default"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
-                />
-                <QuickCopyButton 
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
-                  size="default"
-                />
+                {/* ShareButton components temporarily disabled due to dropdown-menu dependency issues */}
+                <div className="bg-white/10 border border-white/20 text-white px-4 py-2 rounded backdrop-blur-sm">
+                  Share functionality temporarily unavailable
+                </div>
               </div>
             </div>
 

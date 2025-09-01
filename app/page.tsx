@@ -188,45 +188,49 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
 
   // Update countdown display when currentTime changes - now with seconds
   useEffect(() => {
-    if (autoLocation && nextGoldenHourTargetTime && currentTime) {
-      const now = currentTime
-      const selectedDate = date ? new Date(date) : new Date(now.toISOString().split("T")[0])
-      const today = new Date(now.toDateString())
-      const isToday = selectedDate.getTime() === today.getTime()
+    // Run countdown if we have the target time, even if currentTime is not set yet
+    if (autoLocation && nextGoldenHourTargetTime) {
+      const now = currentTime || new Date()
+      const msUntil = nextGoldenHourTargetTime.getTime() - now.getTime()
+      const secondsUntil = Math.floor(msUntil / 1000)
       
-      if (isToday) {
-        const msUntil = nextGoldenHourTargetTime.getTime() - now.getTime()
-        const secondsUntil = Math.floor(msUntil / 1000)
-        
-        if (secondsUntil < 0) {
-          // Golden hour has passed for today
-          setNextGoldenHour("Tomorrow")
-        } else if (secondsUntil === 0) {
-          setNextGoldenHour("Now!")
-        } else if (secondsUntil < 60) {
-          // Less than a minute - show seconds
-          const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
-          setNextGoldenHour(`${prefix}${secondsUntil} second${secondsUntil !== 1 ? 's' : ''}`)
-        } else if (secondsUntil < 3600) {
-          // Less than an hour - show minutes and seconds
-          const minutes = Math.floor(secondsUntil / 60)
-          const seconds = secondsUntil % 60
-          const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
-          setNextGoldenHour(`${prefix}${minutes}m ${seconds}s`)
-        } else {
-          // More than an hour - show hours, minutes, and seconds
-          const hours = Math.floor(secondsUntil / 3600)
-          const minutes = Math.floor((secondsUntil % 3600) / 60)
-          const seconds = secondsUntil % 60
-          const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
-          setNextGoldenHour(`${prefix}${hours}h ${minutes}m ${seconds}s`)
-        }
+      if (secondsUntil < 0) {
+        // Golden hour has passed
+        setNextGoldenHour("starts tomorrow")
+      } else if (secondsUntil === 0) {
+        setNextGoldenHour("Now!")
+      } else if (secondsUntil < 60) {
+        // Less than a minute - show seconds
+        const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
+        setNextGoldenHour(`${prefix}${secondsUntil} second${secondsUntil !== 1 ? 's' : ''}`)
+      } else if (secondsUntil < 3600) {
+        // Less than an hour - show minutes and seconds
+        const minutes = Math.floor(secondsUntil / 60)
+        const seconds = secondsUntil % 60
+        const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
+        setNextGoldenHour(`${prefix}${minutes}m ${seconds}s`)
+      } else if (secondsUntil < 86400) {
+        // Less than a day - show hours, minutes, and seconds
+        const hours = Math.floor(secondsUntil / 3600)
+        const minutes = Math.floor((secondsUntil % 3600) / 60)
+        const seconds = secondsUntil % 60
+        const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
+        setNextGoldenHour(`${prefix}${hours}h ${minutes}m ${seconds}s`)
       } else {
-        // Not today - just show the date
-        setNextGoldenHour("")
+        // More than a day - still show precise time
+        const days = Math.floor(secondsUntil / 86400)
+        const hours = Math.floor((secondsUntil % 86400) / 3600)
+        const minutes = Math.floor((secondsUntil % 3600) / 60)
+        const seconds = secondsUntil % 60
+        const prefix = nextGoldenHourIsStart ? "starts in " : "ends in "
+        if (days === 1) {
+          setNextGoldenHour(`${prefix}${days} day ${hours}h ${minutes}m ${seconds}s`)
+        } else {
+          setNextGoldenHour(`${prefix}${days} days ${hours}h ${minutes}m ${seconds}s`)
+        }
       }
     }
-  }, [currentTime, autoLocation, nextGoldenHourTargetTime, nextGoldenHourIsStart, date])
+  }, [currentTime, autoLocation, nextGoldenHourTargetTime, nextGoldenHourIsStart])
 
   useEffect(() => {
 
@@ -534,12 +538,25 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
           setNextGoldenHourTargetTime(nextGoldenHour.start)
           setNextGoldenHourIsStart(!nextGoldenHour.isCurrent)
 
-          if (nextGoldenHour.isCurrent) {
-            setNextGoldenHour(
-              `ends in ${Math.ceil((nextGoldenHour.end.getTime() - now.getTime()) / (1000 * 60))} minutes`,
-            )
+          // Set initial countdown value
+          const now = currentTime || new Date()
+          const msUntil = nextGoldenHour.start.getTime() - now.getTime()
+          const secondsUntil = Math.floor(msUntil / 1000)
+          
+          if (secondsUntil > 3600) {
+            const hours = Math.floor(secondsUntil / 3600)
+            const minutes = Math.floor((secondsUntil % 3600) / 60)
+            const seconds = secondsUntil % 60
+            const prefix = nextGoldenHour.isCurrent ? "ends in " : "starts in "
+            setNextGoldenHour(`${prefix}${hours}h ${minutes}m ${seconds}s`)
+          } else if (secondsUntil > 60) {
+            const minutes = Math.floor(secondsUntil / 60)
+            const seconds = secondsUntil % 60
+            const prefix = nextGoldenHour.isCurrent ? "ends in " : "starts in "
+            setNextGoldenHour(`${prefix}${minutes}m ${seconds}s`)
           } else {
-            setNextGoldenHour(`starts in ${nextGoldenHour.timeUntil} minutes`)
+            const prefix = nextGoldenHour.isCurrent ? "ends in " : "starts in "
+            setNextGoldenHour(`${prefix}${secondsUntil}s`)
           }
         } else {
           const fallbackTime = new Date(selectedDate)
@@ -549,7 +566,21 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
           setNextGoldenHourEndTime(fallbackTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
           setNextGoldenHourTargetTime(fallbackTime)
           setNextGoldenHourIsStart(true)
-          setNextGoldenHour(`starts in ${Math.max(0, Math.ceil((fallbackTime.getTime() - now.getTime()) / (1000 * 60)))} minutes`)
+          // Set initial fallback countdown
+          const msUntil = Math.max(0, fallbackTime.getTime() - now.getTime())
+          const secondsUntil = Math.floor(msUntil / 1000)
+          if (secondsUntil > 3600) {
+            const hours = Math.floor(secondsUntil / 3600)
+            const minutes = Math.floor((secondsUntil % 3600) / 60)
+            const seconds = secondsUntil % 60
+            setNextGoldenHour(`starts in ${hours}h ${minutes}m ${seconds}s`)
+          } else if (secondsUntil > 60) {
+            const minutes = Math.floor(secondsUntil / 60)
+            const seconds = secondsUntil % 60
+            setNextGoldenHour(`starts in ${minutes}m ${seconds}s`)
+          } else {
+            setNextGoldenHour(`starts in ${secondsUntil}s`)
+          }
         }
       } catch (error) {
         console.error("Error calculating sun times:", error)
