@@ -63,4 +63,6 @@ Thumbs.db
 
 # Database
 prisma/db/*.db
-prisma/db/*.db-journal
+prisma/db/*.db-journaltest-results/
+test-screenshot.png
+test-rerender.html
