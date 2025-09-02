@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import type { LocationData } from "@/lib/location-service"
 import type { WeatherData, PhotographyConditions } from "@/types/weather"
 import { LocationDisplayUtils } from "@/lib/location-display-utils"
+import { CountdownTimer } from "@/components/countdown-timer"
 
 interface GoldenHourDisplayProps {
   nextGoldenHour: string
@@ -13,6 +14,7 @@ interface GoldenHourDisplayProps {
   nextGoldenHourEndTime: string
   nextGoldenHourType: string
   nextGoldenHourIsStart: boolean
+  nextGoldenHourTargetTime?: Date | null
   autoLocation: LocationData | null
   weatherData: WeatherData | null
   photographyConditions: PhotographyConditions | null
@@ -26,6 +28,7 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
   nextGoldenHourEndTime,
   nextGoldenHourType,
   nextGoldenHourIsStart,
+  nextGoldenHourTargetTime,
   autoLocation,
   weatherData,
   photographyConditions,
@@ -223,24 +226,26 @@ export const GoldenHourDisplay = React.memo(function GoldenHourDisplay({
                   return nextGoldenHour
                 }
 
-                // Show countdown or calculating state
-                if (!nextGoldenHour || nextGoldenHour === "") {
+                // Use the isolated countdown timer component
+                if (nextGoldenHourTargetTime) {
                   return (
                     <div className="flex flex-col items-center gap-1">
-                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-xl animate-pulse">
-                        Calculating timing...
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-xl">
+                        <CountdownTimer 
+                          targetTime={nextGoldenHourTargetTime} 
+                          isStart={nextGoldenHourIsStart}
+                          type={nextGoldenHourType}
+                        />
                       </div>
                     </div>
                   )
                 }
                 
-                // Extract just the time part from nextGoldenHour (now includes seconds)
-                const timeOnly = nextGoldenHour?.replace(/^(starts in|ends in) /, "")
-                
+                // Fallback for when no target time is available
                 return (
                   <div className="flex flex-col items-center gap-1">
                     <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-xl">
-                      <span className="animate-pulse">{timeOnly || "calculating..."}</span>
+                      <span className="animate-pulse">calculating...</span>
                     </div>
                   </div>
                 )

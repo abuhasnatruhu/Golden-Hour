@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef, use } from "react"
+import { useState, useEffect, useCallback, useRef, use, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Clock, AlertCircle } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 import { CompactSearchBar } from "@/components/compact-search-bar"
 import { GoldenHourDisplay } from "@/components/golden-hour-display"
 import { TimeCards } from "@/components/time-cards"
+import { CurrentTimeDisplay } from "@/components/current-time-display"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { weatherService } from "@/lib/weather-service"
 import { sunCalculator } from "@/lib/sun-calculator"
@@ -41,6 +42,7 @@ import { LocationBasedFAQ } from "@/components/location-based-faq"
 import PhotographyCalendar from "@/components/photography-calendar"
 import AdvancedPhotographyFeatures from "@/components/advanced-photography-features"
 import { DebugTest } from "@/components/debug-test"
+// import { RenderCounter } from "@/components/render-counter"
 
 interface GoldenHourTimes {
   sunrise: string
@@ -132,7 +134,6 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
   const [date, setDate] = useState("")
   const [times, setTimes] = useState<GoldenHourTimes | null>(null)
   const [loading, setLoading] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
   const [autoLocation, setAutoLocation] = useState<LocationData | null>(null)
   const [nextGoldenHour, setNextGoldenHour] = useState<string>("")
   const [nextGoldenHourTime, setNextGoldenHourTime] = useState<string>("")
@@ -154,11 +155,15 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
   const citiesRef = useRef<HTMLDivElement>(null)
   const timesRef = useRef<HTMLDivElement>(null)
 
-  // Extract URL parameter values to avoid searchParams object reference changes
-  const lat = searchParams.get("lat")
-  const lng = searchParams.get("lon") // Fixed: was "lng", should be "lon" to match URL parameter
-  const locationName = searchParams.get("location")
-  const dateParam = searchParams.get("date")
+  // Memoize URL parameter values to avoid unnecessary re-renders
+  const urlParams = useMemo(() => ({
+    lat: searchParams.get("lat"),
+    lng: searchParams.get("lon"),
+    locationName: searchParams.get("location"),
+    dateParam: searchParams.get("date")
+  }), [searchParams])
+  
+  const { lat, lng, locationName, dateParam } = urlParams
   
   // IMMEDIATE DEBUG - This should show up in console
   console.log("🔥 SEARCHPARAMS DEBUG:", {
@@ -174,32 +179,15 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
 
   useEffect(() => {
     setMounted(true)
-    // This was causing MIME type errors in the browser console
-
-    // Removed direct test - will use manual button instead
-
-    const updateTime = () => {
-      const now = new Date()
-      if (autoLocation?.timezone) {
-        // Create a new Date object with the timezone of the selected location
-        const locationTime = new Date(now.toLocaleString("en-US", { timeZone: autoLocation.timezone }))
-        setCurrentTime(locationTime)
-      } else {
-        // Fallback to local time if no location is selected
-        setCurrentTime(now)
-      }
-    }
-
-    // Update immediately - TEMPORARILY DISABLED FOR DEBUGGING
-    // updateTime()
-
-    // TEMPORARILY DISABLED: Update every second to debug console logs
-    // const timer = setInterval(updateTime, 1000)
-    // return () => clearInterval(timer)
-  }, [autoLocation?.timezone]) // Update when timezone changes
+  }, [])
 
   // Separate useEffect for URL parameter processing
   useEffect(() => {
+    // Skip if no parameters to process
+    if (!lat && !lng && !locationName && !dateParam) {
+      return
+    }
+    
     console.log("URL params useEffect:", {
       lat,
       lng,
@@ -293,7 +281,20 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
       }
     }
 
-    processURLParameters()
+    // Use a flag to prevent multiple executions
+    let isCancelled = false
+    
+    const runProcessing = async () => {
+      if (!isCancelled) {
+        await processURLParameters()
+      }
+    }
+    
+    runProcessing()
+    
+    return () => {
+      isCancelled = true
+    }
   }, [lat, lng, locationName, dateParam]) // Use specific values as dependencies
 
   // useEffect to monitor autoLocation changes
@@ -351,7 +352,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
         notMounted: !mounted ? "Component not mounted" : null,
       })
     }
-  }, [lat, lng, locationName, mounted]) // Remove autoLocation from dependencies to prevent infinite loop
+  }, [lat, lng, locationName, mounted]) // Remove autoDetectLocation from dependencies to prevent infinite loop
 
   const updateURL = useCallback(
     async (locationData: any, selectedDate: string) => {
@@ -718,6 +719,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
             nextGoldenHourEndTime={nextGoldenHourEndTime}
             nextGoldenHourType={nextGoldenHourType}
             nextGoldenHourIsStart={nextGoldenHourIsStart}
+            nextGoldenHourTargetTime={nextGoldenHourTargetTime}
             autoLocation={autoLocation}
             weatherData={weatherData}
             photographyConditions={photographyConditions}
@@ -764,24 +766,7 @@ export default function GoldenHourCalculator({ searchParams: propSearchParams }:
           )}
 
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur-sm rounded-full px-6 py-3 text-foreground border border-border">
-              <Clock className="w-5 h-5" />
-              <span className="font-mono text-lg">
-                {mounted && autoLocation?.timezone
-                  ? currentTime.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      timeZone: autoLocation.timezone,
-                    })
-                  : mounted
-                    ? currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                    : "--:--:--"}
-              </span>
-              {autoLocation && autoLocation.timezone && (
-                <span className="text-sm text-muted-foreground">({autoLocation.timezone.replace("_", " ")})</span>
-              )}
-            </div>
+            <CurrentTimeDisplay timezone={autoLocation?.timezone} />
           </div>
 
           <div ref={citiesRef}>
