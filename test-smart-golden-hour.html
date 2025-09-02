@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Smart Golden Hour</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 1px solid #444; 
+            border-radius: 8px; 
+            background: #2a2a2a;
+        }
+        .success { background-color: #1a4a1a; border-color: #4a8a4a; }
+        .error { background-color: #4a1a1a; border-color: #8a4a4a; }
+        .warning { background-color: #4a4a1a; border-color: #8a8a4a; }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        button:hover { background: #0056b3; }
+        .iframe-container {
+            border: 2px solid #444;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        .log { 
+            font-family: monospace; 
+            font-size: 12px; 
+            background: #0a0a0a; 
+            color: #00ff00;
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+            white-space: pre-wrap; 
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌅 Smart Golden Hour System Test</h1>
+    <p>Testing if the smart golden hour features are working in the live app</p>
+    
+    <div class="test-section">
+        <h2>🧪 Current Golden Hour App</h2>
+        <button onclick="refreshApp()">🔄 Refresh App</button>
+        <button onclick="openAppInNewTab()">🚀 Open in New Tab</button>
+        <button onclick="checkConsole()">🔍 Check Console</button>
+        
+        <div class="iframe-container">
+            <iframe id="appFrame" src="http://localhost:3001"></iframe>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Feature Detection</h2>
+        <div id="featureResults">
+            <p>Click buttons above to test the app...</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 Live Browser Inspection</h2>
+        <button onclick="inspectElements()">🔎 Inspect Elements</button>
+        <button onclick="checkSmartData()">🧠 Check Smart Data</button>
+        <button onclick="validatePriority()">⭐ Validate Evening Priority</button>
+        
+        <div id="inspectionLogs" class="log">
+            Console logs and inspection results will appear here...
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎯 Expected vs Actual</h2>
+        <div id="comparison">
+            <h3>Expected Features:</h3>
+            <ul>
+                <li>✅ Evening golden hour should be primary display</li>
+                <li>✅ Smart text like "Next Golden Hour Today"</li>
+                <li>✅ Secondary morning golden hour info</li>
+                <li>✅ Context-aware titles (Today/Tomorrow/Future)</li>
+                <li>✅ "Golden Hour Happening Now" when current</li>
+            </ul>
+            
+            <h3>Actual Status:</h3>
+            <div id="actualStatus">
+                <p>Click inspect buttons to check actual implementation...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logCount = 0;
+        
+        function addLog(message, type = 'info') {
+            logCount++;
+            const timestamp = new Date().toISOString();
+            const logDiv = document.getElementById('inspectionLogs');
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logDiv.textContent = logEntry + logDiv.textContent;
+        }
+        
+        function addResult(message, type = 'success') {
+            const resultsDiv = document.getElementById('featureResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-section ${type}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            resultsDiv.insertBefore(resultDiv, resultsDiv.firstChild);
+        }
+        
+        function refreshApp() {
+            addLog('Refreshing app iframe...');
+            const frame = document.getElementById('appFrame');
+            frame.src = frame.src;
+            addResult('App refreshed', 'success');
+        }
+        
+        function openAppInNewTab() {
+            addLog('Opening app in new tab...');
+            window.open('http://localhost:3001', '_blank');
+            addResult('App opened in new tab', 'success');
+        }
+        
+        function checkConsole() {
+            addLog('Check browser dev tools console for Smart Golden Hour logs');
+            addResult('💡 Check browser console for 🌅 Smart Golden Hour logs', 'warning');
+        }
+        
+        function inspectElements() {
+            addLog('Starting element inspection...');
+            
+            try {
+                const frame = document.getElementById('appFrame');
+                const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                
+                if (frameDoc) {
+                    // Try to find golden hour elements
+                    const titleElements = frameDoc.querySelectorAll('*');
+                    let foundElements = [];
+                    
+                    titleElements.forEach(el => {
+                        const text = el.textContent || '';
+                        if (text.includes('GOLDEN HOUR') || text.includes('NEXT GOLDEN') || text.includes('TOMORROW')) {
+                            foundElements.push({
+                                tag: el.tagName,
+                                text: text.trim().substring(0, 100),
+                                className: el.className
+                            });
+                        }
+                    });
+                    
+                    addLog(`Found ${foundElements.length} potential golden hour elements`);
+                    foundElements.forEach((el, i) => {
+                        addLog(`Element ${i + 1}: <${el.tag} class="${el.className}">${el.text}...`);
+                    });
+                    
+                    addResult(`Found ${foundElements.length} golden hour elements`, 'success');
+                } else {
+                    addLog('Cannot access iframe content (CORS policy)');
+                    addResult('❌ Cannot inspect iframe - try opening in new tab', 'error');
+                }
+            } catch (error) {
+                addLog(`Inspection error: ${error.message}`);
+                addResult('❌ Inspection failed - CORS or access issue', 'error');
+            }
+        }
+        
+        function checkSmartData() {
+            addLog('Attempting to check smart golden hour data...');
+            
+            // Simulate checking for smart data patterns
+            const expectedPatterns = [
+                'getSmartGoldenHour',
+                'smartGoldenHour.secondary',
+                'Evening Golden Hour',
+                'Morning Golden Hour',
+                'NEXT GOLDEN HOUR TODAY'
+            ];
+            
+            addLog('Expected smart data patterns:');
+            expectedPatterns.forEach(pattern => {
+                addLog(`  - ${pattern}`);
+            });
+            
+            addResult('🧠 Smart data patterns logged - check console', 'warning');
+        }
+        
+        function validatePriority() {
+            addLog('Validating evening priority logic...');
+            
+            const scenarios = [
+                'Currently in morning golden hour → should show evening as primary',
+                'Currently in evening golden hour → should show evening as primary',
+                'Before any golden hour → should show evening as primary',
+                'After all golden hours → should show tomorrow evening as primary',
+                'Future date → should show evening as primary'
+            ];
+            
+            addLog('Evening priority validation scenarios:');
+            scenarios.forEach((scenario, i) => {
+                addLog(`  ${i + 1}. ${scenario}`);
+            });
+            
+            addResult('⭐ Evening priority scenarios logged', 'success');
+            
+            // Update actual status
+            const statusDiv = document.getElementById('actualStatus');
+            statusDiv.innerHTML = `
+                <h4>Current Time: ${new Date().toLocaleTimeString()}</h4>
+                <p><strong>Manual Check Required:</strong></p>
+                <ol>
+                    <li>Open app in new tab</li>
+                    <li>Check if main display shows "Evening Golden Hour" as primary</li>
+                    <li>Look for secondary morning golden hour text below</li>
+                    <li>Verify smart contextual titles (Today/Tomorrow)</li>
+                    <li>Check browser console for 🌅 logs</li>
+                </ol>
+            `;
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            addLog('Smart Golden Hour Test page loaded');
+            addResult('🌅 Test page ready - iframe loading...', 'success');
+            
+            // Check if app loads successfully
+            setTimeout(() => {
+                const frame = document.getElementById('appFrame');
+                try {
+                    if (frame.contentDocument) {
+                        addResult('✅ App loaded successfully', 'success');
+                    } else {
+                        addResult('⚠️ App loaded (CORS protected)', 'warning');
+                    }
+                } catch (e) {
+                    addResult('⚠️ App loaded (iframe access restricted)', 'warning');
+                }
+            }, 3000);
+        });
+        
+        // Auto-refresh every 30 seconds to catch updates
+        setInterval(() => {
+            addLog('Auto-refreshing app to catch any updates...');
+            refreshApp();
+        }, 30000);
+    </script>
+</body>
+</html>

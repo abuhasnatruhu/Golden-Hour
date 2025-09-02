@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Hour Cache Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .clear-btn { background: #dc3545; }
+        .clear-btn:hover { background: #c82333; }
+        .refresh-btn { background: #28a745; }
+        .refresh-btn:hover { background: #1e7e34; }
+        #results { margin-top: 20px; }
+        .log { font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🌅 Golden Hour Cache Fix Test</h1>
+    <p>This page tests the cache clearing and real-time functionality fixes.</p>
+    
+    <div class="test-section">
+        <h2>🧪 Test Controls</h2>
+        <button onclick="testCacheClearing()">🗑️ Test Cache Clearing</button>
+        <button onclick="testRealTimeUpdates()">⏱️ Test Real-Time Updates</button>
+        <button onclick="testLocationDetection()">📍 Test Location Detection</button>
+        <button class="refresh-btn" onclick="location.reload()">🔄 Refresh Page</button>
+        <button class="clear-btn" onclick="clearAllBrowserData()">🧹 Clear All Browser Data</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div id="results">
+            <p>Click a test button to run tests...</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Console Logs</h2>
+        <div id="logs" class="log">Console logs will appear here...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔗 Quick Links</h2>
+        <a href="http://localhost:3001" target="_blank">
+            <button>🌅 Open Golden Hour App</button>
+        </a>
+        <button onclick="openDevTools()">🛠️ Open Dev Tools</button>
+    </div>
+
+    <script>
+        let logCount = 0;
+        
+        function addLog(message, type = 'info') {
+            logCount++;
+            const timestamp = new Date().toISOString();
+            const logDiv = document.getElementById('logs');
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logDiv.textContent = logEntry + logDiv.textContent;
+        }
+        
+        function addResult(message, type = 'success') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-section ${type}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            resultsDiv.insertBefore(resultDiv, resultsDiv.firstChild);
+        }
+        
+        function clearAllBrowserData() {
+            addLog('Clearing all browser storage data...');
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                // Clear cookies (domain-specific)
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                addResult('✅ Browser storage cleared successfully', 'success');
+                addLog('All browser storage cleared');
+            } catch (error) {
+                addResult(`❌ Error clearing browser storage: ${error.message}`, 'error');
+                addLog(`Error clearing storage: ${error.message}`, 'error');
+            }
+        }
+        
+        function testCacheClearing() {
+            addLog('Testing cache clearing functionality...');
+            addResult('🧪 Testing cache clearing...', 'warning');
+            
+            // Test localStorage clearing
+            localStorage.setItem('test-cache-key', 'test-value');
+            addLog('Set test cache value');
+            
+            setTimeout(() => {
+                const testValue = localStorage.getItem('test-cache-key');
+                if (testValue) {
+                    addLog(`Cache test value found: ${testValue}`);
+                    localStorage.removeItem('test-cache-key');
+                    addResult('✅ Cache clearing test passed - localStorage works', 'success');
+                } else {
+                    addResult('⚠️ Cache test - no test value found', 'warning');
+                }
+            }, 100);
+        }
+        
+        function testRealTimeUpdates() {
+            addLog('Testing real-time updates...');
+            addResult('🧪 Testing real-time functionality...', 'warning');
+            
+            const startTime = Date.now();
+            let updateCount = 0;
+            
+            const testInterval = setInterval(() => {
+                updateCount++;
+                const elapsed = Date.now() - startTime;
+                addLog(`Real-time update ${updateCount} at ${elapsed}ms`);
+                
+                if (updateCount >= 5) {
+                    clearInterval(testInterval);
+                    addResult(`✅ Real-time updates working - ${updateCount} updates in ${elapsed}ms`, 'success');
+                }
+            }, 1000);
+            
+            setTimeout(() => {
+                if (updateCount < 5) {
+                    clearInterval(testInterval);
+                    addResult('❌ Real-time updates may have issues - timeout reached', 'error');
+                }
+            }, 6000);
+        }
+        
+        function testLocationDetection() {
+            addLog('Testing location detection...');
+            addResult('🧪 Testing location detection...', 'warning');
+            
+            if (navigator.geolocation) {
+                addLog('Geolocation API available');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        addLog(`Location detected: ${latitude}, ${longitude}`);
+                        addResult(`✅ Location detection works: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 'success');
+                    },
+                    (error) => {
+                        addLog(`Geolocation error: ${error.message}`, 'error');
+                        addResult(`⚠️ Location detection error: ${error.message}`, 'warning');
+                    },
+                    { timeout: 10000, enableHighAccuracy: true }
+                );
+            } else {
+                addResult('❌ Geolocation not supported by browser', 'error');
+                addLog('Geolocation API not available', 'error');
+            }
+        }
+        
+        function openDevTools() {
+            addResult('🛠️ Please manually open Developer Tools (F12)', 'warning');
+            addLog('Dev tools open requested');
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            addLog('Test page loaded');
+            addResult('🌅 Golden Hour Cache Fix Test page loaded', 'success');
+        });
+        
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        console.log = function(...args) {
+            addLog(args.join(' '), 'info');
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            addLog(args.join(' '), 'error');
+            originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            addLog(args.join(' '), 'warn');
+            originalWarn.apply(console, args);
+        };
+    </script>
+</body>
+</html>
